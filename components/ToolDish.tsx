@@ -42,7 +42,7 @@ export default function ToolDish({ t, lang }: { t: Dict; lang: Lang }) {
       </form>
 
       <div className="card" aria-live="polite">
-        <ResultState t={t} loading={api.loading} error={api.error} empty={t.t1Empty} hasData={!!d}>
+        <ResultState t={t} loading={api.loading} error={api.error} detail={api.detail} empty={t.t1Empty} hasData={!!d}>
           {d && (
             <>
               <PrintHead title={d.recipe.name} />

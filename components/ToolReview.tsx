@@ -61,7 +61,7 @@ export default function ToolReview({ t, lang }: { t: Dict; lang: Lang }) {
       </form>
 
       <div className="card" aria-live="polite">
-        <ResultState t={t} loading={api.loading} error={api.error} empty={t.t3Empty} hasData={!!d}>
+        <ResultState t={t} loading={api.loading} error={api.error} detail={api.detail} empty={t.t3Empty} hasData={!!d}>
           {d && (
             <>
               <PrintHead title={d.recipe_name} />

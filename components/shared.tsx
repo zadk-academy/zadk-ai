@@ -8,13 +8,15 @@ export function useApi<T>(url: string) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detail, setDetail] = useState<string | null>(null);
   async function run(body: unknown) {
     setLoading(true);
     setError(null);
+    setDetail(null);
     try {
       const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const json = await res.json().catch(() => ({ error: "unknown" }));
-      if (!res.ok) setError(json.error ?? "unknown");
+      if (!res.ok) { setError(json.error ?? "unknown"); setDetail(json.detail ?? null); }
       else setData(json as T);
     } catch {
       setError("unknown");
@@ -22,7 +24,7 @@ export function useApi<T>(url: string) {
       setLoading(false);
     }
   }
-  return { data, loading, error, run, setData };
+  return { data, loading, error, detail, run, setData };
 }
 
 export function Pills({ options, value, onChange, multi }: {
@@ -45,14 +47,14 @@ export function Pills({ options, value, onChange, multi }: {
   );
 }
 
-export function ResultState({ t, loading, error, empty, children, hasData }: {
-  t: Dict; loading: boolean; error: string | null; empty: string; hasData: boolean; children: React.ReactNode;
+export function ResultState({ t, loading, error, detail, empty, children, hasData }: {
+  t: Dict; loading: boolean; error: string | null; detail?: string | null; empty: string; hasData: boolean; children: React.ReactNode;
 }) {
   if (loading)
     return <div className="loading" role="status"><div className="spinner" /><p>{t.loading}</p></div>;
   return (
     <>
-      {error && <p className="err" role="alert">{t.errors[error] ?? t.errors.unknown}</p>}
+      {error && <p className="err" role="alert">{t.errors[error] ?? t.errors.unknown}{detail && <small dir="ltr" style={{ display: "block", marginTop: 6, opacity: .8, wordBreak: "break-word" }}>{detail}</small>}</p>}
       {hasData ? children : !error && (
         <div className="empty"><div className="ic"><ChefHat /></div><b>{empty}</b></div>
       )}
