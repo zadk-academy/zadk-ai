@@ -67,6 +67,8 @@ export function errorResponse(err: unknown) {
     return Response.json({ error: "busy" }, { status: 429 });
   if (err instanceof Anthropic.AuthenticationError)
     return Response.json({ error: "config" }, { status: 500 });
+  if (err instanceof Anthropic.APIError && /usage limits|credit balance/i.test(err.message))
+    return Response.json({ error: "quota" }, { status: 503 });
   if (err instanceof Anthropic.APIError) {
     // Short, key-free detail so failures can be diagnosed from the browser.
     console.error("Anthropic API error", err.status, err.message);
