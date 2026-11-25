@@ -5,7 +5,7 @@ import type { z } from "zod";
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 
 // Model can be switched from Vercel (env CLAUDE_MODEL) without a code change.
-const MODEL = process.env.CLAUDE_MODEL || "claude-opus-5-5";
+const MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-5-5";
 
 export const ZADK_BASE = `You are a senior executive chef and culinary instructor at ZADK, the Saudi Culinary Arts Academy.
 You help students and chefs think, plan and review. Your answers are a starting point; the chef makes the final call.
