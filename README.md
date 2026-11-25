@@ -22,4 +22,4 @@ npm run dev
 2. In Project Settings → Environment Variables add `ANTHROPIC_API_KEY`.
 3. Deploy.
 
-Each tool call uses the Anthropic API and is billed to that key. The API routes cap inputs and allow about 12 tries per visitor per hour (best effort).
+Each tool call uses the Anthropic API and is billed to that key. Cost controls: each request has a hard output cap (6,000–8,000 tokens), inputs and images are size-limited, and each visitor gets about 10 tries a day (best effort). Set `CLAUDE_MODEL` in Vercel to change the model (default `claude-opus-5-5`; `claude-sonnet-5-5` halves the cost, `claude-haiku-5-5` is far cheaper). Put a monthly spend limit on the API key's workspace as the final cap.

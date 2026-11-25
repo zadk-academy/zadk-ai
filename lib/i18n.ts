@@ -74,7 +74,7 @@ const ar = {
   example: "جرّب مثال جاهز",
   errors: {
     input: "تأكد من تعبئة الخانات المطلوبة.",
-    limit: "وصلت للحد المسموح من التجارب في الساعة. جرّب لاحقاً.",
+    limit: "وصلت للحد اليومي من التجارب (١٠ مرات). جرّب بكرة.",
     busy: "الخدمة مشغولة الآن. انتظر قليلاً وأعد المحاولة.",
     refused: "لم نتمكن من معالجة هذا الطلب. عدّل النص وأعد المحاولة.",
     config: "الموقع غير مهيأ بعد (مفتاح الخدمة مفقود).",
@@ -202,7 +202,7 @@ const en: typeof ar = {
   example: "Try an example",
   errors: {
     input: "Please fill in the required fields.",
-    limit: "You've reached the hourly limit for tries. Please try later.",
+    limit: "You've reached today's limit (10 tries). Please try tomorrow.",
     busy: "The service is busy. Wait a moment and try again.",
     refused: "We couldn't process this request. Edit the text and try again.",
     config: "The site isn't configured yet (service key missing).",

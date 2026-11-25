@@ -35,7 +35,7 @@ ${langLine(i.lang)}`;
     (i.choice ? `\n\nI choose this dish, write its recipe (keep it as the first idea): ${i.choice}` : "");
 
   try {
-    const result = await runStructured({ schema: DishResult, system, content: [{ type: "text", text: user }], effort: "low" });
+    const result = await runStructured({ schema: DishResult, system, content: [{ type: "text", text: user }], effort: "low", maxTokens: 6000 });
     return Response.json(result);
   } catch (e) {
     return errorResponse(e);

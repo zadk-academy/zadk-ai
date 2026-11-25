@@ -21,7 +21,7 @@ export default function ToolReview({ t, lang }: { t: Dict; lang: Lang }) {
   function onFile(f: File | undefined) {
     setImgErr(false);
     if (!f) return setImg(null);
-    if (!/^image\/(jpeg|png|webp|gif)$/.test(f.type) || f.size > 5 * 1024 * 1024) { setImgErr(true); return setImg(null); }
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(f.type) || f.size > 2 * 1024 * 1024) { setImgErr(true); return setImg(null); }
     const r = new FileReader();
     r.onload = () => {
       const url = String(r.result);
@@ -47,7 +47,7 @@ export default function ToolReview({ t, lang }: { t: Dict; lang: Lang }) {
         <label className="filebtn" htmlFor="recimg">{t.t3Image}
           <input id="recimg" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => onFile(e.target.files?.[0])} />
         </label>
-        {imgErr && <p className="err" style={{ marginTop: 6 }}>JPG / PNG / WEBP ≤ 5MB</p>}
+        {imgErr && <p className="err" style={{ marginTop: 6 }}>JPG / PNG / WEBP ≤ 2MB</p>}
         {img && <img className="thumb" src={img.url} alt="" />}
         <label className="f">{t.t3Prices}</label>
         <Pills options={t.t3PriceModes} value={mode} onChange={setMode} />

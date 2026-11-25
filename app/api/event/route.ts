@@ -36,7 +36,7 @@ ${langLine(i.lang)}`;
   const user = `Guests: ${i.guests}\nCooks: ${i.cooks}\nOccasion: ${i.occasion}\nService time: ${i.serviceTime}\nAdvance prep: ${i.prepAhead}\nRequirements: ${i.notes.join(", ") || "none"}\nOther notes: ${i.extra || "none"}`;
 
   try {
-    const result = await runStructured({ schema: EventResult, system, content: [{ type: "text", text: user }], effort: "medium" });
+    const result = await runStructured({ schema: EventResult, system, content: [{ type: "text", text: user }], effort: "low", maxTokens: 8000 });
     return Response.json(result);
   } catch (e) {
     return errorResponse(e);

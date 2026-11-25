@@ -11,7 +11,7 @@ const Input = z.object({
   image: z
     .object({
       mediaType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif"]),
-      data: z.string().max(7_000_000),
+      data: z.string().max(2_800_000), // ~2 MB image
     })
     .nullable(),
   lang: z.enum(["ar", "en"]),
@@ -52,7 +52,7 @@ ${langLine(i.lang)}`;
   });
 
   try {
-    const result = await runStructured({ schema: ReviewResult, system, content, effort: "medium", maxTokens: 16000 });
+    const result = await runStructured({ schema: ReviewResult, system, content, effort: "medium", maxTokens: 8000 });
     return Response.json(result);
   } catch (e) {
     return errorResponse(e);

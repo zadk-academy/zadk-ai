@@ -4,7 +4,8 @@ import type { z } from "zod";
 
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 
-const MODEL = "claude-opus-5-5";
+// Model can be switched from Vercel (env CLAUDE_MODEL) without a code change.
+const MODEL = process.env.CLAUDE_MODEL || "claude-opus-5-5";
 
 export const ZADK_BASE = `You are a senior executive chef and culinary instructor at ZADK, the Saudi Culinary Arts Academy.
 You help students and chefs think, plan and review. Your answers are a starting point; the chef makes the final call.
@@ -32,7 +33,7 @@ export async function runStructured<T extends z.ZodType>(opts: {
   if (!process.env.ANTHROPIC_API_KEY) throw new ConfigError("ANTHROPIC_API_KEY is not set");
   const response = await client.messages.parse({
     model: MODEL,
-    max_tokens: opts.maxTokens ?? 12000,
+    max_tokens: opts.maxTokens ?? 6000, // hard cap on output = hard cap on cost per request
     system: opts.system,
     output_config: { effort: opts.effort ?? "medium", format: zodOutputFormat(opts.schema) },
     messages: [{ role: "user", content: opts.content }],
@@ -47,7 +48,7 @@ export async function runStructured<T extends z.ZodType>(opts: {
 /* Best-effort per-IP limit so a public demo can't be used to run up the API bill.
    Serverless instances don't share memory, so this is a soft guard, not a hard quota. */
 const hits = new Map<string, number[]>();
-export function rateLimited(ip: string, max = 12, windowMs = 60 * 60 * 1000) {
+export function rateLimited(ip: string, max = 10, windowMs = 24 * 60 * 60 * 1000) {
   const now = Date.now();
   const list = (hits.get(ip) ?? []).filter((t) => now - t < windowMs);
   list.push(now);
