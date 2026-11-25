@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { z } from "zod";
 
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
@@ -25,18 +25,16 @@ export class ConfigError extends Error {}
 export async function runStructured<T extends z.ZodType>(opts: {
   schema: T;
   system: string;
-  content: Anthropic.Beta.BetaContentBlockParam[];
+  content: Anthropic.ContentBlockParam[];
   effort?: "low" | "medium" | "high";
   maxTokens?: number;
 }): Promise<z.infer<T>> {
   if (!process.env.ANTHROPIC_API_KEY) throw new ConfigError("ANTHROPIC_API_KEY is not set");
-  const response = await client.beta.messages.parse({
+  const response = await client.messages.parse({
     model: MODEL,
     max_tokens: opts.maxTokens ?? 12000,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
     system: opts.system,
-    output_config: { effort: opts.effort ?? "medium", format: betaZodOutputFormat(opts.schema) },
+    output_config: { effort: opts.effort ?? "medium", format: zodOutputFormat(opts.schema) },
     messages: [{ role: "user", content: opts.content }],
   });
 
@@ -69,8 +67,11 @@ export function errorResponse(err: unknown) {
     return Response.json({ error: "busy" }, { status: 429 });
   if (err instanceof Anthropic.AuthenticationError)
     return Response.json({ error: "config" }, { status: 500 });
-  if (err instanceof Anthropic.APIError)
-    return Response.json({ error: "upstream" }, { status: 502 });
+  if (err instanceof Anthropic.APIError) {
+    // Short, key-free detail so failures can be diagnosed from the browser.
+    console.error("Anthropic API error", err.status, err.message);
+    return Response.json({ error: "upstream", detail: `${err.status ?? ""} ${err.message}`.slice(0, 300) }, { status: 502 });
+  }
   console.error(err);
-  return Response.json({ error: "unknown" }, { status: 500 });
+  return Response.json({ error: "unknown", detail: String(err).slice(0, 300) }, { status: 500 });
 }

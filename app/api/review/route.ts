@@ -44,7 +44,7 @@ Task: review a recipe the way the ZADK Chef Reviewer does. The recipe can be in 
 Never approve the recipe; it is a reviewed draft for the chef to test.
 ${langLine(i.lang)}`;
 
-  const content: Anthropic.Beta.BetaContentBlockParam[] = [];
+  const content: Anthropic.ContentBlockParam[] = [];
   if (i.image) content.push({ type: "image", source: { type: "base64", media_type: i.image.mediaType, data: i.image.data } });
   content.push({
     type: "text",
