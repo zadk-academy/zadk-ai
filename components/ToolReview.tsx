@@ -6,13 +6,20 @@ import type { ReviewResult } from "@/lib/schemas";
 import { Arrow } from "./Icons";
 import { useApi, Pills, ResultState, PrintHead, PrintBtn, Allergens } from "./shared";
 
-type Img = { mediaType: string; data: string; url: string } | null;
+type Up = { mediaType: string; data: string; name: string; url: string | null } | null;
+
+const EXT_TYPES: Record<string, string> = {
+  jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp",
+  pdf: "application/pdf",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
 
 export default function ToolReview({ t, lang }: { t: Dict; lang: Lang }) {
   const [recipe, setRecipe] = useState("");
   const [mode, setMode] = useState(t.t3PriceModes[0]);
   const [prices, setPrices] = useState("");
-  const [img, setImg] = useState<Img>(null);
+  const [img, setImg] = useState<Up>(null);
   const [imgErr, setImgErr] = useState(false);
   const api = useApi<ReviewResult>("/api/review");
   const d = api.data;
@@ -21,11 +28,12 @@ export default function ToolReview({ t, lang }: { t: Dict; lang: Lang }) {
   function onFile(f: File | undefined) {
     setImgErr(false);
     if (!f) return setImg(null);
-    if (!/^image\/(jpeg|png|webp|gif)$/.test(f.type) || f.size > 2 * 1024 * 1024) { setImgErr(true); return setImg(null); }
+    const type = EXT_TYPES[f.name.split(".").pop()?.toLowerCase() ?? ""];
+    if (!type || f.size > 3 * 1024 * 1024) { setImgErr(true); return setImg(null); }
     const r = new FileReader();
     r.onload = () => {
       const url = String(r.result);
-      setImg({ mediaType: f.type, data: url.split(",")[1], url });
+      setImg({ mediaType: type, data: url.split(",")[1], name: f.name, url: type.startsWith("image/") ? url : null });
     };
     r.readAsDataURL(f);
   }
@@ -33,7 +41,7 @@ export default function ToolReview({ t, lang }: { t: Dict; lang: Lang }) {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (recipe.trim().length < 10 && !img) return;
-    api.run({ recipe, prices: myPrices ? prices : "", image: img ? { mediaType: img.mediaType, data: img.data } : null, lang });
+    api.run({ recipe, prices: myPrices ? prices : "", file: img ? { mediaType: img.mediaType, data: img.data, name: img.name } : null, lang });
   }
 
   return (
@@ -45,10 +53,10 @@ export default function ToolReview({ t, lang }: { t: Dict; lang: Lang }) {
         <label className="f" htmlFor="rec">{t.t3Recipe}</label>
         <textarea id="rec" className="input" rows={9} maxLength={6000} value={recipe} onChange={(e) => setRecipe(e.target.value)} />
         <label className="filebtn" htmlFor="recimg">{t.t3Image}
-          <input id="recimg" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => onFile(e.target.files?.[0])} />
+          <input id="recimg" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,.docx,.xlsx" onChange={(e) => onFile(e.target.files?.[0])} />
         </label>
-        {imgErr && <p className="err" style={{ marginTop: 6 }}>JPG / PNG / WEBP ≤ 2MB</p>}
-        {img && <img className="thumb" src={img.url} alt="" />}
+        {imgErr && <p className="err" style={{ marginTop: 6 }}>JPG / PNG / PDF / Word (.docx) / Excel (.xlsx) ≤ 3MB</p>}
+        {img && (img.url ? <img className="thumb" src={img.url} alt="" /> : <p className="sub" style={{ marginTop: 6 }}>📄 {img.name}</p>)}
         <label className="f">{t.t3Prices}</label>
         <Pills options={t.t3PriceModes} value={mode} onChange={setMode} />
         {myPrices && (

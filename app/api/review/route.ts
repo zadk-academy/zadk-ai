@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type Anthropic from "@anthropic-ai/sdk";
 import { ReviewResult } from "@/lib/schemas";
+import { fileToBlocks, IMAGE_TYPES, PDF, DOCX, XLSX } from "@/lib/files";
 import { ZADK_BASE, langLine, runStructured, rateLimited, clientIp, errorResponse } from "@/lib/claude";
 
 export const maxDuration = 120;
@@ -8,10 +9,11 @@ export const maxDuration = 120;
 const Input = z.object({
   recipe: z.string().max(6000),
   prices: z.string().max(2000),
-  image: z
+  file: z
     .object({
-      mediaType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif"]),
-      data: z.string().max(2_800_000), // ~2 MB image
+      mediaType: z.enum([...IMAGE_TYPES, PDF, DOCX, XLSX]),
+      data: z.string().max(4_200_000), // ~3 MB file
+      name: z.string().max(200),
     })
     .nullable(),
   lang: z.enum(["ar", "en"]),
@@ -21,12 +23,12 @@ export async function POST(req: Request) {
   const parsed = Input.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "input" }, { status: 400 });
   const i = parsed.data;
-  if (i.recipe.trim().length < 10 && !i.image) return Response.json({ error: "input" }, { status: 400 });
+  if (i.recipe.trim().length < 10 && !i.file) return Response.json({ error: "input" }, { status: 400 });
   if (rateLimited(clientIp(req))) return Response.json({ error: "limit" }, { status: 429 });
 
   const system = `${ZADK_BASE}
 
-Task: review a recipe the way the ZADK Chef Reviewer does. The recipe can be in any language or format, including a photo.
+Task: review a recipe the way the ZADK Chef Reviewer does. The recipe can be in any language or format, including a photo, PDF, Word or Excel file.
 1. Read the whole recipe. Identify its category (appetizer, soup, salad, main course, rice dish, side, bread, dessert, beverage, sauce).
 2. Find what is illogical, missing or unsafe: impossible quantities (for example cups of salt), ratios (rice to water, flour to liquid, salt %, leavening),
    wrong or mixed units, ingredients used in the method but not listed (or listed and never used), wrong step order, missing times or temperatures, food-safety gaps.
@@ -45,10 +47,16 @@ Never approve the recipe; it is a reviewed draft for the chef to test.
 ${langLine(i.lang)}`;
 
   const content: Anthropic.ContentBlockParam[] = [];
-  if (i.image) content.push({ type: "image", source: { type: "base64", media_type: i.image.mediaType, data: i.image.data } });
+  if (i.file) {
+    try {
+      content.push(...(await fileToBlocks(i.file)));
+    } catch {
+      return Response.json({ error: "file" }, { status: 400 });
+    }
+  }
   content.push({
     type: "text",
-    text: `Recipe:\n${i.recipe || "(see the image)"}\n\nIngredient prices from the user: ${i.prices.trim() || "none, use estimated prices"}`,
+    text: `Recipe:\n${i.recipe || "(see the attached file)"}\n\nIngredient prices from the user: ${i.prices.trim() || "none, use estimated prices"}`,
   });
 
   try {
